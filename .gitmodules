@@ -1,0 +1,12 @@
+[submodule "Dependencies/cxx-log"]
+	path = Dependencies/cxx-log
+	url = https://github.com/lib-cxx/cxx-log.git
+[submodule "Dependencies/swarm-commons"]
+	path = Dependencies/swarm-commons
+	url = https://github.com/swarm-framework/swarm-commons.git
+[submodule "Dependencies/swarm-mapping"]
+	path = Dependencies/swarm-mapping
+	url = https://github.com/swarm-framework/swarm-mapping.git
+[submodule "Dependencies/swarm-http-api"]
+	path = Dependencies/swarm-http-api
+	url = https://github.com/swarm-framework/swarm-http-api.git
