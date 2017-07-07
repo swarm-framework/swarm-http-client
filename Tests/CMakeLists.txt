@@ -17,6 +17,7 @@ add_executable(${PROJECT_NAME}Tests
 )
 target_link_libraries(${PROJECT_NAME}Tests
     ${PROJECT_NAME}
+    ${swarm-http-api_LIBRARY}
 )
 target_include_directories(
     ${PROJECT_NAME}Tests  
@@ -29,6 +30,7 @@ target_include_directories(
         ../Sources
         ${cxx-log_INCLUDE_DIR}
         ${swarm-commons_INCLUDE_DIR}
+        ${swarm-http-api_INCLUDE_DIR}
         ${PROJECT_SOURCE_DIR}/Dependencies/volatile/${CATCH_VERSION} # catch directory
 )
 

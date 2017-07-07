@@ -16,3 +16,19 @@
  */
 
 #include "HTTPClient.hxx"
+
+#include <swarm/exception/SwarmException.hxx>
+#include <swarm/http/message/response/HTTPResponseBuilder.hxx>
+
+namespace swarm {
+ 
+    namespace http {
+     
+            
+        HTTPResponse HTTPClient::perform() {
+            return HTTPResponseBuilder{}.build();
+        }
+        
+        
+    }
+}

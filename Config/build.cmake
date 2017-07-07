@@ -1,11 +1,16 @@
+# Find Curl
+find_package(CURL REQUIRED)
 
 # Include sub projects
 find_dependencies(cxx-log)
 find_dependencies(swarm-commons)
+find_dependencies(swarm-mapping)
+find_dependencies(swarm-http-api)
 
 # Create targets
 add_library(swarm-http-client
     Sources/swarm/http/client/HTTPClient.cxx Sources/swarm/http/client/HTTPClient.hxx
+    Sources/swarm/http/client/HTTPClientBuilder.cxx Sources/swarm/http/client/HTTPClientBuilder.hxx
 )
 
 # Properties of targets
@@ -32,6 +37,16 @@ target_include_directories(
     PRIVATE
         ${cxx-log_INCLUDE_DIR}
         ${swarm-commons_INCLUDE_DIR}
+        ${swarm-http-api_INCLUDE_DIR}
+)
+
+target_link_libraries(
+    swarm-http-client 
+    cxx-log
+    swarm-commons
+    swarm-mapping
+    swarm-http-api
+    ${CURL_LIBRARIES}
 )
 
 set(config_install_dir "lib/cmake/${PROJECT_NAME}")
