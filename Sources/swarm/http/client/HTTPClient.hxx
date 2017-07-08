@@ -18,6 +18,11 @@
 #ifndef SWARM_HTTP_HTTPCLIENT_HXX
 #define SWARM_HTTP_HTTPCLIENT_HXX
 
+#include <cxxlog/Logger.hxx>
+
+#include <string>
+#include <map>
+
 #include <swarm/http/message/response/HTTPResponse.hxx>
 
 namespace swarm {
@@ -25,6 +30,42 @@ namespace swarm {
 
         /// \brief Class HTTPClient
         class HTTPClient {
+            
+            friend class HTTPClientBuilder;
+            
+        private:
+            
+            // Set logger
+            static const cxxlog::Logger LOGGER;
+        
+        private:
+            
+            /// \brief Serveur host
+            std::string host_;
+
+            /// \brief URL path
+            std::string path_;
+
+            /// \brief Headers
+            std::map<std::string, std::string> headers_;
+            
+            /// \brief Query parameters
+            std::map<std::string, std::string> queryParams_;
+            
+            /// \brief Delete default constructor
+            HTTPClient() = delete;
+            
+        private:
+            
+            /// \brief Constructor with host, path, headers and queryParams
+            /// \param host Server host
+            /// \param path Query path
+            /// \param headers All query headers
+            /// \param queryParams All query params
+            HTTPClient(const std::string & host, 
+                       const std::string & path, 
+                       const std::map<std::string, std::string> & headers, 
+                       const std::map<std::string, std::string> & queryParams);
             
         public:
             

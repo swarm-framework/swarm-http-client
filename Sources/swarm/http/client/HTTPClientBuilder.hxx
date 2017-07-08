@@ -32,6 +32,8 @@ namespace swarm {
         class HTTPClientBuilder {
 
           private:
+              
+            // Set logger
             static const cxxlog::Logger LOGGER;
 
           private:

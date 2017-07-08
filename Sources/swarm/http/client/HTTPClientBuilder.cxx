@@ -119,52 +119,22 @@ namespace swarm {
         // Build client
         std::shared_ptr<HTTPClient> HTTPClientBuilder::build() {
             
-            std::stringstream ss;
-            
             // Valid host
             if (host_.empty()) {
                 throw SwarmException{"Unable to create WS without host"};
             }
             
-            // Add host
-            ss << host_;
-            
-            // Test path
+            std::string path;
             if (path_.empty()) {
-                ss << '/';
+                path = '/';
             } else {
                 //ss << path_;
-                ss << transform(pathParams_, path_);
+                path = transform(pathParams_, path_);
             }
             
-            // Test query param
-            if (!queryParams_.empty()) {
-                ss << '?';
-                
-                auto it = queryParams_.begin();
-                auto itEnd = queryParams_.end();
-                
-                while(it != itEnd) {
-                    
-                    auto entry = *it;
-                    
-                    ss << entry.first << '=' << entry.second;
-                
-                    ++it;
-                    
-                    if (it != itEnd) {
-                        ss << '&';
-                    }
-                }
-            }
-            
-            LOGGER.log(cxxlog::Level::INFO, ss.str());
-            
-            for (auto entry : headers_) {
-                LOGGER.log(cxxlog::Level::INFO, "  - %1%:%2%", entry.first, entry.second);
-            }
-            
-            return std::shared_ptr<HTTPClient>{};
+            return std::shared_ptr<HTTPClient>{
+                new HTTPClient{host_, path, headers_, queryParams_}
+            };
         }
         
     }

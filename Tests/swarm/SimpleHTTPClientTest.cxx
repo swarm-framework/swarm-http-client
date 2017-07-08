@@ -25,16 +25,16 @@ using namespace swarm::http;
 TEST_CASE("Simple Client", "[client]") {
 
     auto httpClient = HTTPClientBuilder{}
-        .host("http://localhost:9090")
-        .header("Accept", "application/json")
-        .method(HTTPMethod::GET)
-        .path("/auth/{name}/auth")
-        .queryParam("param1", "value1")
-        .queryParam("param2", "value2")
-        .pathParam("name", "MyName")
-        .build();
-        
-    auto response = httpClient->perform();
+                          .host("http://localhost:9090")
+                          .header("Accept", "application/json")
+                          .method(HTTPMethod::GET)
+                          .path("/auth/{name}/auth")
+                          .queryParam("param1", "value1")
+                          .queryParam("param2", "value2")
+                          .pathParam("name", "MyName")
+                          .build();
+
+    REQUIRE_THROWS(httpClient->perform());
 }
 
 TEST_CASE("Error Client", "[client]") {
@@ -43,7 +43,31 @@ TEST_CASE("Error Client", "[client]") {
 
     REQUIRE_THROWS(httpClientBuilder.build());
     httpClientBuilder.host("http://localhost:9090");
-    
-    
+
     REQUIRE_NOTHROW(httpClientBuilder.build());
+}
+
+TEST_CASE("Client Test params", "[client]") {
+
+    HTTPClientBuilder httpClientBuilder{};
+
+    REQUIRE_THROWS(httpClientBuilder.build());
+    httpClientBuilder.host("http://localhost").path("/swarm/params.php").queryParam("test", "param");
+
+    auto httpClient = httpClientBuilder.build();
+    httpClient->perform();
+}
+
+TEST_CASE("Client Test headers", "[client]") {
+
+    HTTPClientBuilder httpClientBuilder{};
+
+    REQUIRE_THROWS(httpClientBuilder.build());
+    httpClientBuilder.host("http://localhost")
+        .path("/swarm/headers.php")
+        .header("header1", "value1")
+        .header("header2", "value2");
+
+    auto httpClient = httpClientBuilder.build();
+    httpClient->perform();
 }

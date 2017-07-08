@@ -1,18 +1,18 @@
 /*
  * Copyright 2017 <copyright holder> <email>
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 #include "HTTPClient.hxx"
@@ -20,15 +20,112 @@
 #include <swarm/exception/SwarmException.hxx>
 #include <swarm/http/message/response/HTTPResponseBuilder.hxx>
 
+#include <curl/curl.h>
+#include <iostream>
+
 namespace swarm {
- 
+
     namespace http {
-     
+
+        // Init logger
+        const cxxlog::Logger HTTPClient::LOGGER = LOGGER(HTTPClient);
+        
+        // Constructor with host, path, headers and queryParams
+        HTTPClient::HTTPClient(const std::string &host, 
+                               const std::string &path,
+                               const std::map<std::string, std::string> &headers,
+                               const std::map<std::string, std::string> &queryParams) : host_(host), path_(path), headers_(headers), queryParams_(queryParams) {
+                
             
-        HTTPResponse HTTPClient::perform() {
-            return HTTPResponseBuilder{}.build();
         }
-        
-        
+
+        // Perform
+        HTTPResponse HTTPClient::perform() {
+
+            std::stringstream ss;
+            
+            // Add host
+            ss << host_;
+            
+            // Test path
+            ss << path_;
+            
+            // Test query param
+            if (!queryParams_.empty()) {
+                ss << '?';
+                
+                auto it = queryParams_.begin();
+                auto itEnd = queryParams_.end();
+                
+                while(it != itEnd) {
+                    
+                    auto entry = *it;
+                    
+                    ss << entry.first << '=' << entry.second;
+                
+                    ++it;
+                    
+                    if (it != itEnd) {
+                        ss << '&';
+                    }
+                }
+            }
+            
+            LOGGER.log(cxxlog::Level::INFO, ss.str());
+            for (auto entry : headers_) {
+                LOGGER.log(cxxlog::Level::INFO, "  - %1%:%2%", entry.first, entry.second);
+            }
+            
+            // Init global
+            curl_global_init(CURL_GLOBAL_ALL);
+
+            // Init curl connection
+            CURL *curl_handle = curl_easy_init();
+            if (!curl_handle) {
+                throw swarm::SwarmException{"Unable to init curl"};
+            }
+
+            // Create header chunk
+            struct curl_slist *chunk = NULL;
+    
+            // Add all headers
+            for (auto entry : headers_) {
+                chunk = curl_slist_append(chunk, std::string{entry.first + ": " + entry.second}.c_str());
+            }
+            
+            // Add headers
+            curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, chunk);
+    
+            // Set URL
+            curl_easy_setopt(curl_handle, CURLOPT_URL, ss.str().c_str());
+
+            // Set connect only
+            // curl_easy_setopt(curl_handle, CURLOPT_CONNECT_ONLY, 1);
+
+            // POST data
+            // curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, "name=daniel&project=curl");
+            
+            auto res = curl_easy_perform(curl_handle);
+            if (res != CURLE_OK) {
+                throw SwarmException{"%1% for %2%", curl_easy_strerror(res), ss.str()};
+            }
+
+            // Read response
+            long responseCode;
+            curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &responseCode);
+
+            // Read content type
+            char *ct;
+            curl_easy_getinfo(curl_handle, CURLINFO_CONTENT_TYPE, &ct);
+
+            std::cout << "Response : " << responseCode << " : " << ct << std::endl;
+
+            auto response = HTTPResponseBuilder{}.build();
+
+            // Cleanup global
+            curl_global_cleanup();
+
+            return response;
+        }
     }
 }
