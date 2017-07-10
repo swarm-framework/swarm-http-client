@@ -52,7 +52,7 @@ TEST_CASE("Client Test params", "[client]") {
     HTTPClientBuilder httpClientBuilder{};
 
     REQUIRE_THROWS(httpClientBuilder.build());
-    httpClientBuilder.host("http://localhost").path("/swarm/params.php").queryParam("test", "param");
+    httpClientBuilder.host("http://localhost").path("/swarm/client/params.php").queryParam("test", "param");
 
     auto httpClient = httpClientBuilder.build();
     httpClient->perform();
@@ -64,10 +64,40 @@ TEST_CASE("Client Test headers", "[client]") {
 
     REQUIRE_THROWS(httpClientBuilder.build());
     httpClientBuilder.host("http://localhost")
-        .path("/swarm/headers.php")
+        .path("/swarm/client/headers.php")
         .header("header1", "value1")
         .header("header2", "value2");
 
     auto httpClient = httpClientBuilder.build();
+    httpClient->perform();
+}
+
+TEST_CASE("Client Test method", "[client]") {
+
+    HTTPClientBuilder httpClientBuilder{};
+
+    REQUIRE_THROWS(httpClientBuilder.build());
+    httpClientBuilder.host("http://localhost")
+        .path("/swarm/client/method.php");
+
+    auto httpClient = httpClientBuilder.method(HTTPMethod::GET).build();
+    httpClient->perform();
+    
+    httpClient = httpClientBuilder.method(HTTPMethod::POST).build();
+    httpClient->perform();
+    
+    httpClient = httpClientBuilder.method(HTTPMethod::PUT).build();
+    httpClient->perform();
+    
+    httpClient = httpClientBuilder.method(HTTPMethod::DELETE).build();
+    httpClient->perform();
+    
+    httpClient = httpClientBuilder.method(HTTPMethod::HEAD).build();
+    httpClient->perform();
+    
+    httpClient = httpClientBuilder.method(HTTPMethod::OPTIONS).build();
+    httpClient->perform();
+    
+    httpClient = httpClientBuilder.method(HTTPMethod::PATCH).build();
     httpClient->perform();
 }

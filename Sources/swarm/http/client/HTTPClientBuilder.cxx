@@ -133,7 +133,7 @@ namespace swarm {
             }
             
             return std::shared_ptr<HTTPClient>{
-                new HTTPClient{host_, path, headers_, queryParams_}
+                new HTTPClient{host_, method_, path, headers_, queryParams_, bodyResponseBuilder_}
             };
         }
         

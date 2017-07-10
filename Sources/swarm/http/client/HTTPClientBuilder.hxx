@@ -19,6 +19,7 @@
 #define SWARM_HTTP_HTTPCLIENTBUILDER_HXX
 
 #include "HTTPClient.hxx"
+#include "body/BodyResponse.hxx"
 #include <swarm/http/message/request/HTTPMethod.hxx>
 #include <cxxlog/Logger.hxx>
 
@@ -37,6 +38,7 @@ namespace swarm {
             static const cxxlog::Logger LOGGER;
 
           private:
+              
             /// \brief Method
             HTTPMethod method_ = HTTPMethod::GET;
 
@@ -54,6 +56,9 @@ namespace swarm {
 
             /// \brief Headers
             std::map<std::string, std::string> headers_;
+            
+            /// \brief Body response builder
+            std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder_;
 
             /// \brief Transform path
             /// \param params All params

@@ -11,6 +11,8 @@ find_dependencies(swarm-http-api)
 add_library(swarm-http-client
     Sources/swarm/http/client/HTTPClient.cxx Sources/swarm/http/client/HTTPClient.hxx
     Sources/swarm/http/client/HTTPClientBuilder.cxx Sources/swarm/http/client/HTTPClientBuilder.hxx
+    Sources/swarm/http/client/body/BodyResponse.cxx Sources/swarm/http/client/body/BodyResponse.hxx
+    Sources/swarm/http/client/body/InMemoryBodyResponse.cxx Sources/swarm/http/client/body/InMemoryBodyResponse.hxx
 )
 
 # Properties of targets
