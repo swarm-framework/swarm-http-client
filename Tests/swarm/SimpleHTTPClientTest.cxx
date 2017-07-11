@@ -19,6 +19,7 @@
 
 #include <swarm/http/client/HTTPClient.hxx>
 #include <swarm/http/client/HTTPClientBuilder.hxx>
+#include <swarm/http/client/request/BodyRequest.hxx>
 
 using namespace swarm::http;
 
@@ -77,27 +78,40 @@ TEST_CASE("Client Test method", "[client]") {
     HTTPClientBuilder httpClientBuilder{};
 
     REQUIRE_THROWS(httpClientBuilder.build());
-    httpClientBuilder.host("http://localhost")
-        .path("/swarm/client/method.php");
+    httpClientBuilder.host("http://localhost").path("/swarm/client/method.php");
 
     auto httpClient = httpClientBuilder.method(HTTPMethod::GET).build();
     httpClient->perform();
-    
+
     httpClient = httpClientBuilder.method(HTTPMethod::POST).build();
     httpClient->perform();
-    
+
     httpClient = httpClientBuilder.method(HTTPMethod::PUT).build();
     httpClient->perform();
-    
+
     httpClient = httpClientBuilder.method(HTTPMethod::DELETE).build();
     httpClient->perform();
-    
+
     httpClient = httpClientBuilder.method(HTTPMethod::HEAD).build();
     httpClient->perform();
-    
+
     httpClient = httpClientBuilder.method(HTTPMethod::OPTIONS).build();
     httpClient->perform();
-    
+
     httpClient = httpClientBuilder.method(HTTPMethod::PATCH).build();
+    httpClient->perform();
+}
+
+TEST_CASE("Client Test POST data", "[client]") {
+
+    HTTPClientBuilder httpClientBuilder{};
+
+    REQUIRE_THROWS(httpClientBuilder.build());
+    httpClientBuilder.host("http://localhost")
+        .path("/swarm/client/post.php")
+        .method(HTTPMethod::POST)
+        .body(std::make_shared<StringBodyRequest>("plop"));
+
+    auto httpClient = httpClientBuilder.build();
     httpClient->perform();
 }

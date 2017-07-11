@@ -18,7 +18,7 @@
 #ifndef SWARM_HTTP_HTTPCLIENT_HXX
 #define SWARM_HTTP_HTTPCLIENT_HXX
 
-#include "body/BodyResponse.hxx"
+#include "response/BodyResponse.hxx"
 #include <cxxlog/Logger.hxx>
 
 #include <map>
@@ -29,6 +29,8 @@
 
 namespace swarm {
     namespace http {
+
+        class BodyRequest;
 
         /// \brief Class HTTPClient
         class HTTPClient {
@@ -58,6 +60,9 @@ namespace swarm {
             /// \brief Body response builder
             std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder_;
 
+            /// \brief Define body request content
+            std::shared_ptr<BodyRequest> bodyRequest_;
+
             /// \brief Delete default constructor
             HTTPClient() = delete;
 
@@ -68,20 +73,31 @@ namespace swarm {
             /// \param path Query path
             /// \param headers All query headers
             /// \param queryParams All query params
-            /// \param body response builder
+            /// \param bodyResponseBuilder Body response builder
+            /// \param bodyRequest Body request
             HTTPClient(const std::string &host, const HTTPMethod &method, const std::string &path,
                        const std::map<std::string, std::string> &headers,
                        const std::map<std::string, std::string> &queryParams,
-                       std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder);
+                       std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder,
+                       std::shared_ptr<BodyRequest> bodyRequest);
 
-            /// \brief Callback for reading body response
+            /// \brief Callback for reading body response content
             /// \param contents buffer pointer
             /// \param size First part size
             /// \param nmemb Second part size (multiplicator)
             /// \param userp User pointer
             static size_t bodyResponseCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
+            /// \brief Callback for reading body request content
+            /// \param ptr Pointer to set data
+            /// \param size Current readed size
+            /// \param nmemb Current multiplicator
+            /// \param stream Body request
+            static size_t bodyRequestCallback(void *ptr, size_t size, size_t nmemb, void *stream);
+
           public:
+              
+            /// \brief Perform request
             HTTPResponse perform();
         };
     }

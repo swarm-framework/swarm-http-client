@@ -17,7 +17,8 @@
 
 #include "HTTPClient.hxx"
 
-#include "body/InMemoryBodyResponse.hxx"
+#include "response/InMemoryBodyResponse.hxx"
+#include "request/BodyRequest.hxx"
 
 #include <swarm/exception/SwarmException.hxx>
 #include <swarm/http/message/response/HTTPResponseBuilder.hxx>
@@ -36,22 +37,32 @@ namespace swarm {
         HTTPClient::HTTPClient(const std::string &host, const HTTPMethod &method, const std::string &path,
                                const std::map<std::string, std::string> &headers,
                                const std::map<std::string, std::string> &queryParams,
-                               std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder)
+                               std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder,
+                               std::shared_ptr<BodyRequest> bodyRequest)
             : host_(host), method_(method), path_(path), headers_(headers), queryParams_(queryParams),
-              bodyResponseBuilder_(bodyResponseBuilder) {
+              bodyResponseBuilder_(bodyResponseBuilder), bodyRequest_(bodyRequest) {
 
             // Test or init body builder
             if (!bodyResponseBuilder_) {
                 bodyResponseBuilder_ = std::shared_ptr<BodyResponseBuilder>{new InMemoryBodyResponseBuilder{}};
             }
         }
+        
+        // Callback for reading body request content
+        size_t HTTPClient::bodyRequestCallback(void *ptr, size_t size, size_t nmemb, void *stream) {
+                
+            BodyRequest & body = *static_cast<BodyRequest*>(stream);
+            
+            // Append data
+            return body.append(ptr);
+        }
 
         // Callback for reading body response
         size_t HTTPClient::bodyResponseCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-            
+
             // Cast to body
-            MutableBodyResponse & body = *static_cast<MutableBodyResponse*>(userp);
-            
+            MutableBodyResponse &body = *static_cast<MutableBodyResponse *>(userp);
+
             // Append data
             return body.append(static_cast<char *>(contents), size * nmemb);
         }
@@ -115,13 +126,33 @@ namespace swarm {
 
             // Add headers
             curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, chunk);
-
+        
             // Set response body callback
             curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, bodyResponseCallback);
             
+            // Test body request
+            if(bodyRequest_) {
+
+                // Enable upload
+                curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
+
+                // Set request body callback
+                curl_easy_setopt(curl_handle, CURLOPT_READFUNCTION, bodyRequestCallback);
+                
+                // Set body request
+                curl_easy_setopt(curl_handle, CURLOPT_READDATA, bodyRequest_.get());
+                
+                // Find and test size
+                auto size = bodyRequest_->size();
+                if (size.has_value()) {
+                    // Set file size
+                    curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE_LARGE, (curl_off_t) size.value());
+                }
+            }
+            
             // Create body reponse
             auto bodyResponse = bodyResponseBuilder_->build();
-            
+
             // Pass body response
             curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)bodyResponse.get());
 

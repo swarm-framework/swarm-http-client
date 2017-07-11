@@ -19,7 +19,7 @@
 #define SWARM_HTTP_HTTPCLIENTBUILDER_HXX
 
 #include "HTTPClient.hxx"
-#include "body/BodyResponse.hxx"
+#include "response/BodyResponse.hxx"
 #include <swarm/http/message/request/HTTPMethod.hxx>
 #include <cxxlog/Logger.hxx>
 
@@ -29,6 +29,8 @@
 namespace swarm {
     namespace http {
 
+        class BodyRequest;
+        
         /// \brief Define an HTTP client builder
         class HTTPClientBuilder {
 
@@ -59,6 +61,9 @@ namespace swarm {
             
             /// \brief Body response builder
             std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder_;
+            
+            /// \brief Define body request content
+            std::shared_ptr<BodyRequest> bodyRequest_;
 
             /// \brief Transform path
             /// \param params All params
@@ -98,6 +103,11 @@ namespace swarm {
             /// \param value Header value
             /// \return Current builder
             HTTPClientBuilder &header(const std::string &key, const std::string &value);
+            
+            /// \brief Set body request
+            /// \param body Request body
+            /// \return Current builder
+            HTTPClientBuilder &body(std::shared_ptr<BodyRequest> body);
 
             /// \brief Build client
             /// \return client

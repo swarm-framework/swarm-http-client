@@ -116,6 +116,12 @@ namespace swarm {
             return ss.str();
         }
         
+        // Set body request
+        HTTPClientBuilder &HTTPClientBuilder::body(std::shared_ptr<BodyRequest> body) {
+            bodyRequest_ = body;
+            return *this;
+        }
+        
         // Build client
         std::shared_ptr<HTTPClient> HTTPClientBuilder::build() {
             
@@ -133,7 +139,7 @@ namespace swarm {
             }
             
             return std::shared_ptr<HTTPClient>{
-                new HTTPClient{host_, method_, path, headers_, queryParams_, bodyResponseBuilder_}
+                new HTTPClient{host_, method_, path, headers_, queryParams_, bodyResponseBuilder_, bodyRequest_}
             };
         }
         
