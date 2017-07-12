@@ -16,6 +16,7 @@ add_library(swarm-http-client
     Sources/swarm/http/client/response/InMemoryBodyResponse.cxx Sources/swarm/http/client/response/InMemoryBodyResponse.hxx
     
     Sources/swarm/http/client/request/BodyRequest.cxx Sources/swarm/http/client/request/BodyRequest.hxx
+    Sources/swarm/http/client/HTTPResult.cxx Sources/swarm/http/client/HTTPResult.hxx Sources/swarm/http/client/HTTPResult.txx
 )
 
 # Properties of targets

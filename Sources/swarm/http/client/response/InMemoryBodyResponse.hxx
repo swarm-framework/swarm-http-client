@@ -22,9 +22,6 @@
 #include <memory>
 #include <sstream>
 
-// FIXME Remove
-#include <iostream>
-
 namespace swarm {
     namespace http {
         
@@ -36,7 +33,6 @@ namespace swarm {
         public:
             
             ~InMemoryBodyResponse() {
-                std::cerr << ss_.str() << std::endl;
             }
             
             virtual size_t append(char * content, size_t size) override {
@@ -44,6 +40,11 @@ namespace swarm {
                 ss_.write(content, size);
                 
                 return size;
+            }
+            
+            /// \brief Convert body to string
+            virtual std::string str() override {
+                return ss_.str();
             }
         };
         

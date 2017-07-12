@@ -25,12 +25,12 @@
 #include <string>
 
 #include <swarm/http/message/request/HTTPMethod.hxx>
-#include <swarm/http/message/response/HTTPResponse.hxx>
 
 namespace swarm {
     namespace http {
 
         class BodyRequest;
+        class HTTPResult;
 
         /// \brief Class HTTPClient
         class HTTPClient {
@@ -97,8 +97,8 @@ namespace swarm {
 
           public:
               
-            /// \brief Perform request
-            HTTPResponse perform();
+            /// \return Perform request
+            std::shared_ptr<HTTPResult> perform();
         };
     }
 }

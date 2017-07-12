@@ -23,20 +23,34 @@
 namespace swarm {
     namespace http {
 
-        /// \brief Class BodyResponse
+        /// \brief Define a body response
         class BodyResponse {
         public:
+            
+            /// \brief Virtual destructor
             virtual ~BodyResponse() {}
+            
+            /// \brief Convert body to string
+            virtual std::string str() = 0;
         };
         
-        /// \brief Class BodyResponse
+        /// \brief Mutable body response defining internal system used to set data
         class MutableBodyResponse : public BodyResponse {
         public:
+            
+            /// \brief Appen readed data to body
+            /// \param content Data content to append
+            /// \param size Size of data content to append
             virtual size_t append(char * content, size_t size) = 0;
         };
         
+        /// \brief Define internal response builder
         struct BodyResponseBuilder {
+            
+            /// \brief Instanciate new response builder
             virtual std::shared_ptr<MutableBodyResponse> build() = 0;
+            
+            /// \brief Virtual destructor
             virtual ~BodyResponseBuilder() {}
         };
     }

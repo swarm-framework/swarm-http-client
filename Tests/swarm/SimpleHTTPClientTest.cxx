@@ -17,9 +17,11 @@
 
 #include <catch/catch.hxx>
 
+#include <string>
 #include <swarm/http/client/HTTPClient.hxx>
 #include <swarm/http/client/HTTPClientBuilder.hxx>
 #include <swarm/http/client/request/BodyRequest.hxx>
+#include <swarm/http/client/HTTPResult.hxx>
 
 using namespace swarm::http;
 
@@ -56,7 +58,8 @@ TEST_CASE("Client Test params", "[client]") {
     httpClientBuilder.host("http://localhost").path("/swarm/client/params.php").queryParam("test", "param");
 
     auto httpClient = httpClientBuilder.build();
-    httpClient->perform();
+    auto result = httpClient->perform();
+    REQUIRE(result->status() == HTTPResponseStatus::OK);
 }
 
 TEST_CASE("Client Test headers", "[client]") {
@@ -70,7 +73,8 @@ TEST_CASE("Client Test headers", "[client]") {
         .header("header2", "value2");
 
     auto httpClient = httpClientBuilder.build();
-    httpClient->perform();
+    auto result = httpClient->perform();
+    REQUIRE(result->status() == HTTPResponseStatus::OK);
 }
 
 TEST_CASE("Client Test method", "[client]") {
@@ -81,25 +85,39 @@ TEST_CASE("Client Test method", "[client]") {
     httpClientBuilder.host("http://localhost").path("/swarm/client/method.php");
 
     auto httpClient = httpClientBuilder.method(HTTPMethod::GET).build();
-    httpClient->perform();
+    auto result1 = httpClient->perform();
+    REQUIRE(result1->status() == HTTPResponseStatus::OK);
+    REQUIRE("GET" == result1->body<std::string>());
 
     httpClient = httpClientBuilder.method(HTTPMethod::POST).build();
-    httpClient->perform();
+    auto result2 = httpClient->perform();
+    REQUIRE(result2->status() == HTTPResponseStatus::OK);
+    REQUIRE("POST" == result2->body<std::string>());
 
     httpClient = httpClientBuilder.method(HTTPMethod::PUT).build();
-    httpClient->perform();
+    auto result3 = httpClient->perform();
+    REQUIRE(result3->status() == HTTPResponseStatus::OK);
+    REQUIRE("PUT" == result3->body<std::string>());
 
     httpClient = httpClientBuilder.method(HTTPMethod::DELETE).build();
-    httpClient->perform();
+    auto result4 = httpClient->perform();
+    REQUIRE(result4->status() == HTTPResponseStatus::OK);
+    REQUIRE("DELETE" == result4->body<std::string>());
 
-    httpClient = httpClientBuilder.method(HTTPMethod::HEAD).build();
-    httpClient->perform();
+    //httpClient = httpClientBuilder.method(HTTPMethod::HEAD).build();
+    //auto result5 = httpClient->perform();
+    //REQUIRE(result5->status() == HTTPResponseStatus::OK);
+    //REQUIRE("HEAD" == result5->body<std::string>());
 
     httpClient = httpClientBuilder.method(HTTPMethod::OPTIONS).build();
-    httpClient->perform();
+    auto result6 = httpClient->perform();
+    REQUIRE(result6->status() == HTTPResponseStatus::OK);
+    REQUIRE("OPTIONS" == result6->body<std::string>());
 
     httpClient = httpClientBuilder.method(HTTPMethod::PATCH).build();
-    httpClient->perform();
+    auto result7 = httpClient->perform();
+    REQUIRE(result7->status() == HTTPResponseStatus::OK);
+    REQUIRE("PATCH" == result7->body<std::string>());
 }
 
 TEST_CASE("Client Test POST data", "[client]") {
@@ -110,8 +128,10 @@ TEST_CASE("Client Test POST data", "[client]") {
     httpClientBuilder.host("http://localhost")
         .path("/swarm/client/post.php")
         .method(HTTPMethod::POST)
-        .body(std::make_shared<StringBodyRequest>("plop"));
+        .body(std::make_shared<StringBodyRequest>("Post data as string"));
 
     auto httpClient = httpClientBuilder.build();
-    httpClient->perform();
+    auto result = httpClient->perform();
+    REQUIRE(result->status() == HTTPResponseStatus::OK);
+    REQUIRE("Post data as string" == result->body<std::string>());
 }

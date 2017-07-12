@@ -17,6 +17,7 @@
 
 #include "HTTPClient.hxx"
 
+#include "HTTPResult.hxx"
 #include "response/InMemoryBodyResponse.hxx"
 #include "request/BodyRequest.hxx"
 
@@ -54,7 +55,7 @@ namespace swarm {
             BodyRequest & body = *static_cast<BodyRequest*>(stream);
             
             // Append data
-            return body.append(ptr);
+            return body.append(ptr, size * nmemb);
         }
 
         // Callback for reading body response
@@ -68,7 +69,7 @@ namespace swarm {
         }
 
         // Perform
-        HTTPResponse HTTPClient::perform() {
+        std::shared_ptr<HTTPResult> HTTPClient::perform() {
 
             std::stringstream ss;
 
@@ -172,14 +173,10 @@ namespace swarm {
             char *ct;
             curl_easy_getinfo(curl_handle, CURLINFO_CONTENT_TYPE, &ct);
 
-            std::cout << "Response : " << responseCode << " : " << ct << std::endl;
-
-            auto response = HTTPResponseBuilder{}.build();
-
             // Cleanup global
             curl_global_cleanup();
 
-            return response;
+            return std::shared_ptr<HTTPResult>{new HTTPResult{HTTPResponseStatus::fromCode(200), bodyResponse}};
         }
     }
 }

@@ -22,21 +22,28 @@
 namespace swarm {
     namespace http {
         
-            StringBodyRequest::StringBodyRequest(const std::string & str) : str_(str) {
-                
+            StringBodyRequest::StringBodyRequest(const std::string & str) : str_(str), c_str(str_.c_str()) {
             }
             
             // content length
             std::optional<size_t> StringBodyRequest::size() const {
-                return str_.str().length();
+                return str_.length();
             }
             
             // Append data
-            size_t StringBodyRequest::append(void *ptr) {
-                auto size = str_.str().length();
-                const char * cStr = str_.str().c_str();
-                memcpy (ptr, cStr, size );
-                return size;
+            size_t StringBodyRequest::append(void *ptr, size_t size) {
+                
+                size_t realSize = str_.length() - offset_;
+                
+                if (realSize > size) {
+                    memcpy (ptr, c_str + offset_, size );
+                    offset_ += size;
+                    return size;
+                } else {
+                    memcpy (ptr, c_str + offset_, realSize );
+                    offset_ += realSize;
+                    return realSize;
+                }
             }
     }
 }

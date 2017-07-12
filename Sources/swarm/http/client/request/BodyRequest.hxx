@@ -32,19 +32,31 @@ namespace swarm {
             
             /// \brief Append data
             /// \param ptr External pointer
-            virtual size_t append(void *ptr) = 0;
+            /// \param size Max size
+            virtual size_t append(void *ptr, size_t size) = 0;
             
             /// \brief Destructor
             virtual ~BodyRequest() {}
         };
         
+        /// \brief String body request
         class StringBodyRequest : public BodyRequest {
             
         private:
-            std::stringstream str_;
+            
+            /// \brief Body as string
+            std::string str_;
+            
+            /// \brief Offset to read
+            size_t offset_ = 0;
+            
+            /// \brief C point to chars
+            const char * c_str;
             
         public:
             
+            /// \brief Constructor with string
+            /// \param str STring containing the body
             StringBodyRequest(const std::string & str);
             
             /// \return content length
@@ -52,7 +64,8 @@ namespace swarm {
             
             /// \brief Append data
             /// \param ptr External pointer
-            virtual size_t append(void *ptr) override;
+            /// \param size Max size
+            virtual size_t append(void *ptr, size_t size) override;
         };
     }
 }
