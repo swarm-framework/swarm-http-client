@@ -44,3 +44,4 @@ swarm-di.kdev4
 cmake-build-debug/
 
 swarm-http-client.kdev4
+/bin/
