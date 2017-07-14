@@ -29,7 +29,7 @@
 namespace swarm {
     namespace http {
 
-        class BodyRequest;
+        struct BodyRequest;
         class HTTPResult;
 
         /// \brief Class HTTPClient
