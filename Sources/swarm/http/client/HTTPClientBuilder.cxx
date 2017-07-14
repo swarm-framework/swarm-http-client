@@ -57,7 +57,7 @@ namespace swarm {
         }
         
         // Add header
-        HTTPClientBuilder & HTTPClientBuilder::header(const std::string & key, const std::string & value) {
+        HTTPClientBuilder & HTTPClientBuilder::header(std::shared_ptr<const HTTPHeader> key, const std::string & value) {
             this->headers_[key] = value;
             return *this; 
         }

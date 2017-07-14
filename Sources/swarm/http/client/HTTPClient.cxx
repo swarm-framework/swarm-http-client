@@ -23,20 +23,124 @@
 
 #include <swarm/exception/SwarmException.hxx>
 #include <swarm/http/message/response/HTTPResponseBuilder.hxx>
+#include <swarm/http/message/header/HTTPHeaders.hxx>
 
 #include <curl/curl.h>
-#include <iostream>
+#include <cstring>
+
+#include <ostream>
 
 namespace swarm {
 
     namespace http {
 
+
+        /// \brief Internal class used to read headers from libcurl
+        class HeaderReader {
+            
+            /// \brief Read states
+            enum State {
+                /// \brief Waitting request line
+                REQUEST, 
+                /// \brief Waiting other headers or commit '\r\n'
+                HEADERS
+            };
+            
+        private:
+            
+            /// \brief Current state
+            State state_ = REQUEST;
+            
+            /// \brief current headers
+            std::map<std::shared_ptr<const HTTPHeader>, std::string> headers_{};
+            
+            void appendHeader(const char * buffer, size_t size) {
+                
+                size_t index = 0;
+                
+                std::stringstream keySs{};
+                std::stringstream valueSs{};
+                
+                // Read key
+                for (; index < size; ++index) {
+                    if (buffer[index] == ':') {
+                        ++index;
+                        break;
+                    }
+                    
+                    // Add char to key
+                    keySs << buffer[index];
+                }
+                
+                if (index >= size) {
+                    HTTPClient::LOGGER.log(cxxlog::Level::WARNING, " - Unable to read header %1%", keySs.str());
+                    return;
+                }
+                
+                // Remove white spaces
+                for (; index < size; ++index) {
+                    if (buffer[index] 
+                        != ' ') {
+                        break;
+                    }
+                }
+                
+                // Read value
+                for (; index < size; ++index) {
+                    
+                    char c = buffer[index];
+                    
+                    if (c == '\n' || c == '\r') {
+                        break;
+                    }
+                    
+                    // Add char to value
+                    valueSs << c;
+                }
+                
+                HTTPClient::LOGGER.log(cxxlog::Level::INFO, [&](std::ostream & out) { out << " - " << keySs.str() << ": " << valueSs.str();});
+                
+                // Add header
+                headers_[HTTPHeaders::get(keySs.str())] = valueSs.str();
+            }
+            
+        public:
+            
+            /// \brief Append message
+            /// \param buffer Buffer containing the message
+            /// \param size Buffer size
+            void append(const char * buffer, size_t size) {
+                
+                if (state_ == REQUEST) {
+                    if (size > 4 && strncmp("HTTP", buffer, 4) == 0) {
+                        state_ = HEADERS;
+                        if (!headers_.empty()) {
+                            headers_.clear();
+                        }
+                    }
+                    // FIXME SINON LOG
+                } else {
+                    appendHeader(buffer, size);
+                }
+            }
+            
+            /// \brief Commit headers
+            void commit() {
+                // FIXME Log commit message
+                state_ = REQUEST;
+            }
+            
+            std::map<std::shared_ptr<const HTTPHeader>, std::string> get() {
+                return headers_;
+            }
+        };
+        
         // Init logger
         const cxxlog::Logger HTTPClient::LOGGER = LOGGER(HTTPClient);
 
         // Constructor with host, path, headers and queryParams
         HTTPClient::HTTPClient(const std::string &host, const HTTPMethod &method, const std::string &path,
-                               const std::map<std::string, std::string> &headers,
+                               const std::map<std::shared_ptr<const HTTPHeader>, std::string> &headers,
                                const std::map<std::string, std::string> &queryParams,
                                std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder,
                                std::shared_ptr<BodyRequest> bodyRequest)
@@ -58,6 +162,25 @@ namespace swarm {
             return body.append(ptr, size * nmemb);
         }
 
+        // Callback for reading headers
+        size_t HTTPClient::headersResponseCallback(char *buffer, size_t size, size_t nitems, void *userdata) {
+            
+            // Cast to header reader
+            HeaderReader & headerReader = *static_cast<HeaderReader*>(userdata);
+            
+            // Find real size
+            size_t realSize = size * nitems;
+            
+            // Test commit
+            if (realSize > 2) {
+                headerReader.append(buffer, realSize);
+            } else {
+                headerReader.commit();
+            }
+            
+            return realSize;
+        }
+        
         // Callback for reading body response
         size_t HTTPClient::bodyResponseCallback(void *contents, size_t size, size_t nmemb, void *userp) {
 
@@ -122,14 +245,11 @@ namespace swarm {
 
             // Add all headers
             for (auto entry : headers_) {
-                chunk = curl_slist_append(chunk, std::string{entry.first + ": " + entry.second}.c_str());
+                chunk = curl_slist_append(chunk, std::string{entry.first->key() + ": " + entry.second}.c_str());
             }
-
+            
             // Add headers
             curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, chunk);
-        
-            // Set response body callback
-            curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, bodyResponseCallback);
             
             // Test body request
             if(bodyRequest_) {
@@ -151,12 +271,24 @@ namespace swarm {
                 }
             }
             
+            // Create header reader
+            HeaderReader headerReader{};
+            
+            // Set response headers callback
+            curl_easy_setopt(curl_handle, CURLOPT_HEADERFUNCTION, headersResponseCallback);
+            
+            // Pass body response
+            curl_easy_setopt(curl_handle, CURLOPT_HEADERDATA, static_cast<void*>(&headerReader));
+
+            
             // Create body reponse
             auto bodyResponse = bodyResponseBuilder_->build();
 
+            // Set response body callback
+            curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, bodyResponseCallback);
+            
             // Pass body response
-            curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)bodyResponse.get());
-
+            curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, static_cast<void*>(bodyResponse.get()));
             // Set URL
             curl_easy_setopt(curl_handle, CURLOPT_URL, ss.str().c_str());
 
@@ -176,7 +308,7 @@ namespace swarm {
             // Cleanup global
             curl_global_cleanup();
 
-            return std::shared_ptr<HTTPResult>{new HTTPResult{HTTPResponseStatus::fromCode(200), bodyResponse}};
+            return std::shared_ptr<HTTPResult>{new HTTPResult{HTTPResponseStatus::fromCode(responseCode), headerReader.get(), bodyResponse}};
         }
     }
 }

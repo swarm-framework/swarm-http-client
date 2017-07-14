@@ -27,21 +27,25 @@ namespace swarm {
                 
         template<class T>
         struct BodyConverter {
-            T convert(std::shared_ptr<BodyResponse> response) {
+            std::shared_ptr<T> convert(std::shared_ptr<BodyResponse> response) {
                 throw SwarmException{"Unable to get data"};
             }
         };
                         
         template<>
         struct BodyConverter<std::string> {
-            std::string convert(std::shared_ptr<BodyResponse> response) {
-                return response->str();
+            std::shared_ptr<std::string> convert(std::shared_ptr<BodyResponse> response) {
+                return std::shared_ptr<std::string>{new std::string{response->str()}};
             }
         };
         
         template<class T>
-        T HTTPResult::body() {
-            return BodyConverter<T>{}.convert(response_);
+        std::shared_ptr<T> HTTPResult::body() {
+            if (body_) {
+                return BodyConverter<T>{}.convert(body_);
+            } else {
+                return {};
+            }
         }
     }
 }

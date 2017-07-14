@@ -21,6 +21,7 @@
 #include <swarm/http/client/HTTPClient.hxx>
 #include <swarm/http/client/HTTPClientBuilder.hxx>
 #include <swarm/http/client/request/BodyRequest.hxx>
+#include <swarm/http/message/header/HTTPHeaders.hxx>
 #include <swarm/http/client/HTTPResult.hxx>
 
 using namespace swarm::http;
@@ -29,7 +30,7 @@ TEST_CASE("Simple Client", "[client]") {
 
     auto httpClient = HTTPClientBuilder{}
                           .host("http://localhost:9090")
-                          .header("Accept", "application/json")
+                          .header(HTTPHeader::ACCEPT, "application/json")
                           .method(HTTPMethod::GET)
                           .path("/auth/{name}/auth")
                           .queryParam("param1", "value1")
@@ -69,12 +70,28 @@ TEST_CASE("Client Test headers", "[client]") {
     REQUIRE_THROWS(httpClientBuilder.build());
     httpClientBuilder.host("http://localhost")
         .path("/swarm/client/headers.php")
-        .header("header1", "value1")
-        .header("header2", "value2");
+        .header(HTTPHeaders::get("header1"), "value1")
+        .header(HTTPHeaders::get("header2"), "value2");
 
     auto httpClient = httpClientBuilder.build();
     auto result = httpClient->perform();
     REQUIRE(result->status() == HTTPResponseStatus::OK);
+    
+    auto count = result->headers().size();
+    
+    if (count == 5) {
+        REQUIRE(count == 5);
+    } else if (count == 6) {
+        REQUIRE(count == 6);
+    } else {
+        REQUIRE(count == 5);
+    }
+    
+    REQUIRE_NOTHROW(result->headers().at(HTTPHeader::DATE));
+    REQUIRE_NOTHROW(result->headers().at(HTTPHeader::SERVER));
+    REQUIRE_NOTHROW(result->headers().at(HTTPHeader::CONTENT_LENGTH));
+    REQUIRE_NOTHROW(result->headers().at(HTTPHeader::CONTENT_TYPE));
+    REQUIRE_NOTHROW(result->headers().at(HTTPHeaders::get("X-Powered-By")));
 }
 
 TEST_CASE("Client Test method", "[client]") {
@@ -87,22 +104,22 @@ TEST_CASE("Client Test method", "[client]") {
     auto httpClient = httpClientBuilder.method(HTTPMethod::GET).build();
     auto result1 = httpClient->perform();
     REQUIRE(result1->status() == HTTPResponseStatus::OK);
-    REQUIRE("GET" == result1->body<std::string>());
+    REQUIRE("GET" == *result1->body<std::string>());
 
     httpClient = httpClientBuilder.method(HTTPMethod::POST).build();
     auto result2 = httpClient->perform();
     REQUIRE(result2->status() == HTTPResponseStatus::OK);
-    REQUIRE("POST" == result2->body<std::string>());
+    REQUIRE("POST" == *result2->body<std::string>());
 
     httpClient = httpClientBuilder.method(HTTPMethod::PUT).build();
     auto result3 = httpClient->perform();
     REQUIRE(result3->status() == HTTPResponseStatus::OK);
-    REQUIRE("PUT" == result3->body<std::string>());
+    REQUIRE("PUT" == *result3->body<std::string>());
 
     httpClient = httpClientBuilder.method(HTTPMethod::DELETE).build();
     auto result4 = httpClient->perform();
     REQUIRE(result4->status() == HTTPResponseStatus::OK);
-    REQUIRE("DELETE" == result4->body<std::string>());
+    REQUIRE("DELETE" == *result4->body<std::string>());
 
     //httpClient = httpClientBuilder.method(HTTPMethod::HEAD).build();
     //auto result5 = httpClient->perform();
@@ -112,12 +129,12 @@ TEST_CASE("Client Test method", "[client]") {
     httpClient = httpClientBuilder.method(HTTPMethod::OPTIONS).build();
     auto result6 = httpClient->perform();
     REQUIRE(result6->status() == HTTPResponseStatus::OK);
-    REQUIRE("OPTIONS" == result6->body<std::string>());
+    REQUIRE("OPTIONS" == *result6->body<std::string>());
 
     httpClient = httpClientBuilder.method(HTTPMethod::PATCH).build();
     auto result7 = httpClient->perform();
     REQUIRE(result7->status() == HTTPResponseStatus::OK);
-    REQUIRE("PATCH" == result7->body<std::string>());
+    REQUIRE("PATCH" == *result7->body<std::string>());
 }
 
 TEST_CASE("Client Test POST data", "[client]") {
@@ -133,5 +150,5 @@ TEST_CASE("Client Test POST data", "[client]") {
     auto httpClient = httpClientBuilder.build();
     auto result = httpClient->perform();
     REQUIRE(result->status() == HTTPResponseStatus::OK);
-    REQUIRE("Post data as string" == result->body<std::string>());
+    REQUIRE("Post data as string" == *result->body<std::string>());
 }

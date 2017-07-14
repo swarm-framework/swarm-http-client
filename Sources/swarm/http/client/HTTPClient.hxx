@@ -25,6 +25,7 @@
 #include <string>
 
 #include <swarm/http/message/request/HTTPMethod.hxx>
+#include <swarm/http/message/header/HTTPHeader.hxx>
 
 namespace swarm {
     namespace http {
@@ -36,6 +37,7 @@ namespace swarm {
         class HTTPClient {
 
             friend class HTTPClientBuilder;
+            friend class HeaderReader;
 
           private:
             // Set logger
@@ -52,7 +54,7 @@ namespace swarm {
             std::string path_;
 
             /// \brief Headers
-            std::map<std::string, std::string> headers_;
+            std::map<std::shared_ptr<const HTTPHeader>, std::string> headers_;
 
             /// \brief Query parameters
             std::map<std::string, std::string> queryParams_;
@@ -76,7 +78,7 @@ namespace swarm {
             /// \param bodyResponseBuilder Body response builder
             /// \param bodyRequest Body request
             HTTPClient(const std::string &host, const HTTPMethod &method, const std::string &path,
-                       const std::map<std::string, std::string> &headers,
+                       const std::map<std::shared_ptr<const HTTPHeader>, std::string> &headers,
                        const std::map<std::string, std::string> &queryParams,
                        std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder,
                        std::shared_ptr<BodyRequest> bodyRequest);
@@ -88,6 +90,14 @@ namespace swarm {
             /// \param userp User pointer
             static size_t bodyResponseCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
+            /// \brief Callback for reading headers
+            /// \param buffer sting (whithout zero end) containing header
+            /// \param size item size
+            /// \param nitems Number of items
+            /// \param userdata User data
+            /// \return item * nitems
+            static size_t headersResponseCallback(char *buffer, size_t size, size_t nitems, void *userdata);
+
             /// \brief Callback for reading body request content
             /// \param ptr Pointer to set data
             /// \param size Current readed size
@@ -96,7 +106,6 @@ namespace swarm {
             static size_t bodyRequestCallback(void *ptr, size_t size, size_t nmemb, void *stream);
 
           public:
-              
             /// \return Perform request
             std::shared_ptr<HTTPResult> perform();
         };

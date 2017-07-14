@@ -21,6 +21,7 @@
 #include "HTTPClient.hxx"
 #include "response/BodyResponse.hxx"
 #include <swarm/http/message/request/HTTPMethod.hxx>
+#include <swarm/http/message/header/HTTPHeader.hxx>
 #include <cxxlog/Logger.hxx>
 
 #include <string>
@@ -57,7 +58,7 @@ namespace swarm {
             std::map<std::string, std::string> pathParams_;
 
             /// \brief Headers
-            std::map<std::string, std::string> headers_;
+            std::map<std::shared_ptr<const HTTPHeader>, std::string> headers_;
             
             /// \brief Body response builder
             std::shared_ptr<BodyResponseBuilder> bodyResponseBuilder_;
@@ -102,7 +103,7 @@ namespace swarm {
             /// \param key Header key
             /// \param value Header value
             /// \return Current builder
-            HTTPClientBuilder &header(const std::string &key, const std::string &value);
+            HTTPClientBuilder &header(std::shared_ptr<const HTTPHeader> key, const std::string &value);
             
             /// \brief Set body request
             /// \param body Request body

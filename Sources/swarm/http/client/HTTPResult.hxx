@@ -18,31 +18,48 @@
 #ifndef SWARM_HTTP_HTTPRESULT_HXX
 #define SWARM_HTTP_HTTPRESULT_HXX
 
+#include "response/BodyResponse.hxx"
+#include <map>
 #include <memory>
 #include <string>
+#include <swarm/http/message/header/HTTPHeader.hxx>
 #include <swarm/http/message/response/HTTPResponseStatus.hxx>
-#include "response/BodyResponse.hxx"
 
 namespace swarm {
     namespace http {
-        
-        /// \brief Class HTTPResult
+
+        /// \brief Define an HTTP client result
         class HTTPResult {
-            
-        private:
-            
+
+          private:
+            /// \brief Response status
             HTTPResponseStatus status_;
+
+            /// \brief Headers response
+            std::map<std::shared_ptr<const HTTPHeader>, std::string> headers_;
+
+            /// \brief Response body
+            std::shared_ptr<BodyResponse> body_;
+
+          public:
+              
+              /// \brief Constructor  with status, headers and body
+              /// \param status Response status
+              /// \param headers Responses headers
+              /// \param body Response body
+            HTTPResult(const HTTPResponseStatus &status,
+                       const std::map<std::shared_ptr<const HTTPHeader>, std::string> &headers,
+                       std::shared_ptr<BodyResponse> body);
+
+            /// \return Response status
+            const HTTPResponseStatus status() const;
             
-            std::shared_ptr<BodyResponse> response_;
-            
-        public:
-            
-            HTTPResult(const HTTPResponseStatus & status, std::shared_ptr<BodyResponse> response);
-            
-            const HTTPResponseStatus status();
-            
-            template<class T>
-            T body();
+            /// \return Response headers
+            const std::map<std::shared_ptr<const HTTPHeader>, std::string> & headers() const;
+
+            /// \return Retrieve body as T
+            template <class T>
+            std::shared_ptr<T> body();
         };
     }
 }
