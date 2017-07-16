@@ -19,7 +19,7 @@
 #define SWARM_HTTP_HTTPCLIENT_HXX
 
 #include "response/BodyResponse.hxx"
-#include <cxxlog/Logger.hxx>
+#include <cxx-log/Logger.hxx>
 
 #include <map>
 #include <string>
