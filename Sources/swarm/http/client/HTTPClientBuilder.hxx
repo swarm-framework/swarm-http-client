@@ -22,7 +22,7 @@
 #include "response/BodyResponse.hxx"
 #include <swarm/http/message/request/HTTPMethod.hxx>
 #include <swarm/http/message/header/HTTPHeader.hxx>
-#include <cxxlog/Logger.hxx>
+#include <cxx-log/Logger.hxx>
 
 #include <string>
 #include <map>

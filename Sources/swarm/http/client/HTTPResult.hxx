@@ -37,7 +37,7 @@ namespace swarm {
 
             /// \brief Headers response
             std::map<std::shared_ptr<const HTTPHeader>, std::string> headers_;
-            ww
+            
             /// \brief Response body
             std::shared_ptr<BodyResponse> body_;
 
